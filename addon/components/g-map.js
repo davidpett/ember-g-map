@@ -8,6 +8,8 @@ export default Ember.Component.extend({
   classNames: ['g-map'],
   bannedOptions: Ember.A(['center', 'zoom']),
 
+  centerOnResize: true,
+
   init() {
     this._super();
     this.set('markers', Ember.A());
@@ -34,7 +36,17 @@ export default Ember.Component.extend({
       (typeof FastBoot === 'undefined')) {
       const canvas = this.$().find('.g-map-canvas').get(0);
       const options = this.get('permittedOptions');
-      this.set('map', new google.maps.Map(canvas, options));
+      const map = new google.maps.Map(canvas, options);
+      window.addEventListener('resize', () => {
+        let map = this.get('map');
+        if (map) {
+          google.maps.event.trigger(map, 'resize');
+          if (this.get('centerOnResize')) {
+            this.setCenter();
+          }
+        }
+      });
+      this.set('map', map);
     }
     this.setZoom();
     this.setCenter();
