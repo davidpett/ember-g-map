@@ -37,16 +37,17 @@ export default Ember.Component.extend({
       const canvas = this.$().find('.g-map-canvas').get(0);
       const options = this.get('permittedOptions');
       const map = new google.maps.Map(canvas, options);
-      window.addEventListener('resize', () => {
-        let map = this.get('map');
-        if (map) {
-          google.maps.event.trigger(map, 'resize');
-          if (this.get('centerOnResize')) {
+      this.set('map', map);
+
+      if (this.get('centerOnResize')) {
+        window.addEventListener('resize', () => {
+          let map = this.get('map');
+          if (map) {
+            google.maps.event.trigger(map, 'resize');
             this.setCenter();
           }
-        }
-      });
-      this.set('map', map);
+        });
+      }
     }
     this.setZoom();
     this.setCenter();
