@@ -4,14 +4,14 @@ import layout from '../templates/components/g-map';
 const { isEmpty, isPresent, computed, observer, run } = Ember;
 
 export default Ember.Component.extend({
-  layout: layout,
+  layout,
   classNames: ['g-map'],
   bannedOptions: Ember.A(['center', 'zoom']),
 
   centerOnResize: true,
 
   init() {
-    this._super();
+    this._super(...arguments);
     this.set('markers', Ember.A());
     this.set('polylines', Ember.A());
     if (isEmpty(this.get('options'))) {
@@ -31,9 +31,9 @@ export default Ember.Component.extend({
   }),
 
   didInsertElement() {
-    this._super();
-    if (isEmpty(this.get('map')) &&
-      (typeof FastBoot === 'undefined')) {
+    this._super(...arguments);
+    if (isEmpty(this.get('map'))
+      && (typeof FastBoot === 'undefined')) {
       const canvas = this.$().find('.g-map-canvas').get(0);
       const options = this.get('permittedOptions');
       const map = new google.maps.Map(canvas, options);
@@ -89,10 +89,10 @@ export default Ember.Component.extend({
     const lat = this.get('lat');
     const lng = this.get('lng');
 
-    if (isPresent(map) &&
-        isPresent(lat) &&
-        isPresent(lng) &&
-        (typeof FastBoot === 'undefined')) {
+    if (isPresent(map)
+      && isPresent(lat)
+      && isPresent(lng)
+      && (typeof FastBoot === 'undefined')) {
       const center = new google.maps.LatLng(lat, lng);
       map.setCenter(center);
     }
@@ -129,17 +129,22 @@ export default Ember.Component.extend({
       return isPresent(marker.get('lat')) && isPresent(marker.get('lng'));
     });
 
-    if (markers.length > 0 &&
-        (typeof FastBoot === 'undefined')) {
-      const map = this.get('map');
-      const bounds = new google.maps.LatLngBounds();
-      const points = markers.map((marker) => {
-        return new google.maps.LatLng(marker.get('lat'), marker.get('lng'));
-      });
-
-      points.forEach((point) => bounds.extend(point));
-      map.fitBounds(bounds);
+    if (markers.length === 0
+        || (typeof FastBoot !== 'undefined')) {
+      return;
     }
+
+    const map = this.get('map');
+    const bounds = new google.maps.LatLngBounds();
+
+    markers.forEach((marker) => {
+      if (isPresent(marker.get('viewport'))) {
+        bounds.union(marker.get('viewport'));
+      } else {
+        bounds.extend(new google.maps.LatLng(marker.get('lat'), marker.get('lng')));
+      }
+    });
+    map.fitBounds(bounds);
   },
 
   groupMarkerClicked(marker, group) {

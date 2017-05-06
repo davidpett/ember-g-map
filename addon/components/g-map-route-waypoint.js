@@ -5,13 +5,13 @@ import GMapRouteComponent from './g-map-route';
 const { isEmpty, isPresent, observer, computed, run, assert } = Ember;
 
 const GMapRouteWaypointComponent = Ember.Component.extend({
-  layout: layout,
+  layout,
   classNames: ['g-map-route-waypoint'],
 
   map: computed.alias('routeContext.map'),
 
   init() {
-    this._super(arguments);
+    this._super(...arguments);
     if (isEmpty(this.stopover)) {
       this.stopover = true;
     }
@@ -22,7 +22,7 @@ const GMapRouteWaypointComponent = Ember.Component.extend({
   },
 
   didInsertElement() {
-    this._super();
+    this._super(...arguments);
     this.updateWaypoint();
   },
 
@@ -37,12 +37,12 @@ const GMapRouteWaypointComponent = Ember.Component.extend({
   updateWaypoint() {
     const { lat, lng } = this.getProperties(['lat', 'lng']);
 
-    if (isPresent(lat) &&
-        isPresent(lng) &&
-        (typeof FastBoot === 'undefined')) {
+    if (isPresent(lat)
+      && isPresent(lng)
+      && (typeof FastBoot === 'undefined')) {
       let location = new google.maps.LatLng(lat, lng);
       this.set('waypoint', {
-        location: location,
+        location,
         stopover: this.get('stopover')
       });
     }

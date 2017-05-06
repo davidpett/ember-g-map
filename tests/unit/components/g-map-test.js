@@ -1,6 +1,6 @@
 import Ember from 'ember';
 import { moduleForComponent } from 'ember-qunit';
-import test from '../../ember-sinon-qunit/test';
+import test from 'ember-sinon-qunit/test-support/test';
 import sinon from 'sinon';
 
 const { run } = Ember;
@@ -289,13 +289,15 @@ test('it doesn\'t trigger `fitToMarkers` with markersFitMode !== "live"', functi
 test('it calls `fitBounds` of google map on `fitToMarkers`', function() {
   const firstMarker = Ember.Object.create({ lat: 1, lng: 2 });
   const secondMarker = Ember.Object.create({ lat: 3, lng: 4 });
+  const thirdMarker = Ember.Object.create({ lat: 5, lng: 6, viewport: { b: 7, f: 8 } });
   const component = this.subject();
   this.render();
 
   fakeMapObject.fitBounds = sinon.stub();
 
   const fakeLatLngBounds = {
-    extend: sinon.stub()
+    extend: sinon.stub(),
+    union: sinon.stub()
   };
   sinon.stub(google.maps, 'LatLngBounds').returns(fakeLatLngBounds);
 
@@ -303,7 +305,7 @@ test('it calls `fitBounds` of google map on `fitToMarkers`', function() {
   stubbedLatLng.onCall(0).returns(firstMarker);
   stubbedLatLng.onCall(1).returns(secondMarker);
 
-  run(() => component.set('markers', [ firstMarker, secondMarker ]));
+  run(() => component.set('markers', [firstMarker, secondMarker, thirdMarker]));
   run(() => component.fitToMarkers());
   sinon.assert.calledOnce(google.maps.LatLngBounds);
 
@@ -314,6 +316,9 @@ test('it calls `fitBounds` of google map on `fitToMarkers`', function() {
   sinon.assert.calledTwice(fakeLatLngBounds.extend);
   sinon.assert.calledWith(fakeLatLngBounds.extend, firstMarker);
   sinon.assert.calledWith(fakeLatLngBounds.extend, secondMarker);
+
+  sinon.assert.calledOnce(fakeLatLngBounds.union);
+  sinon.assert.calledWith(fakeLatLngBounds.union, thirdMarker.viewport);
 
   sinon.assert.calledOnce(fakeMapObject.fitBounds);
   sinon.assert.calledWith(fakeMapObject.fitBounds, fakeLatLngBounds);
@@ -360,7 +365,7 @@ test('it calls `closeInfowindow` for each marker in group on `groupMarkerClicked
   const secondMarker = Ember.Object.create({ group: 'black' });
   const thirdMarker = Ember.Object.create({ group: 'blue' });
   const fourthMarker = Ember.Object.create({ group: 'blue' });
-  const markers = Ember.A([ firstMarker, secondMarker, thirdMarker, fourthMarker ]);
+  const markers = Ember.A([firstMarker, secondMarker, thirdMarker, fourthMarker]);
   markers.forEach((marker) => marker.closeInfowindow = sinon.stub());
 
   const component = this.subject();

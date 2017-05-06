@@ -5,13 +5,13 @@ import GMapComponent from './g-map';
 const { isEmpty, isPresent, observer, computed, run, assert, typeOf } = Ember;
 
 const GMapMarkerComponent = Ember.Component.extend({
-  layout: layout,
+  layout,
   classNames: ['g-map-marker'],
 
   map: computed.alias('mapContext.map'),
 
   init() {
-    this._super(arguments);
+    this._super(...arguments);
     this.infowindow = null;
     if (isEmpty(this.get('group'))) {
       this.set('group', null);
@@ -24,9 +24,9 @@ const GMapMarkerComponent = Ember.Component.extend({
   },
 
   didInsertElement() {
-    this._super();
-    if (isEmpty(this.get('marker')) &&
-      (typeof FastBoot === 'undefined')) {
+    this._super(...arguments);
+    if (isEmpty(this.get('marker'))
+      && (typeof FastBoot === 'undefined')) {
       const marker = new google.maps.Marker();
       this.set('marker', marker);
     }
@@ -118,10 +118,10 @@ const GMapMarkerComponent = Ember.Component.extend({
     const lat = this.get('lat');
     const lng = this.get('lng');
 
-    if (isPresent(marker) &&
-        isPresent(lat) &&
-        isPresent(lng) &&
-        (typeof FastBoot === 'undefined')) {
+    if (isPresent(marker)
+      && isPresent(lat)
+      && isPresent(lng)
+      && (typeof FastBoot === 'undefined')) {
       const position = new google.maps.LatLng(lat, lng);
       if (isPresent(position)) {
         marker.setPosition(position);

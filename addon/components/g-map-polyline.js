@@ -8,13 +8,13 @@ const { isEmpty, isPresent, observer, computed, run, assert, typeOf } = Ember;
 const allowedPolylineOptions = Ember.A(['strokeColor', 'strokeWeight', 'strokeOpacity', 'zIndex', 'geodesic', 'icons', 'clickable', 'draggable', 'visible', 'path']);
 
 const GMapPolylineComponent = Ember.Component.extend({
-  layout: layout,
+  layout,
   classNames: ['g-map-polyline'],
 
   map: computed.alias('mapContext.map'),
 
   init() {
-    this._super(arguments);
+    this._super(...arguments);
     this.infowindow = null;
     this.set('coordinates', Ember.A());
     if (isEmpty(this.get('group'))) {
@@ -28,7 +28,7 @@ const GMapPolylineComponent = Ember.Component.extend({
   },
 
   didInsertElement() {
-    this._super();
+    this._super(...arguments);
     if (isEmpty(this.get('polyline'))) {
       const options = compact(this.getProperties(allowedPolylineOptions));
       const polyline = new google.maps.Polyline(options);

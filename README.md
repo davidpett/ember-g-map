@@ -36,6 +36,7 @@ In `config/environment.js` you can specify:
 - additional Google Maps libraries to be loaded along with this add-on
   (check the full list [here](https://developers.google.com/maps/documentation/javascript/libraries)),
 - optional API key or client ID for your application (additional info could be found [here](https://developers.google.com/maps/web/)),
+- optional [channel](https://developers.google.com/maps/premium/reports/usage-reports#channels),
 - optional version number,
 - optional exclude parameter, which prevents inclusion of the google maps api script tag into the index.html (in case one wants to handle loading of google maps lib by himself),
 - optional language for map localization,
@@ -47,6 +48,7 @@ ENV['g-map'] = {
   libraries: ['places', 'geometry'],
   key: 'your-unique-google-map-api-key',
   client: 'gme-your-unique-google-client-id',
+  channel: 'my-google-map-api-channel',
   version: '3.26',
   language: 'ru',
   protocol: 'https'
@@ -80,6 +82,7 @@ with the main `g-map` component. You can also set optional attributes:
 - `draggable` boolean option,
 - `onClick` action to track all `click` events on that marker,
 - `onDrag` action to track all `dragend` events on that marker (callback receives new `lat` and `lng` in attributes).
+- `viewport` optional google.maps.LatLngBounds, provides an optimized map viewport for the marker. This is generally provided by the [google geocoder](https://developers.google.com/maps/documentation/javascript/3.exp/reference#PlaceGeometry)
 
 ```handlebars
 {{#g-map lat=37.7833 lng=-122.4167 zoom=12 as |context|}}
@@ -119,8 +122,7 @@ myIcon: {
 ## Map with Info Windows
 
 These Info Windows will be open right after component is rendered
-and will be closed forever after user closes them. You can specify
-optional `onClose` action to tear down anything you need when Info Window
+and will be closed forever after user closes them. You can specify optional `onOpen` action to trigger anything you need to when the Info Window opens. The infowindow is passed as the only argument to the `onOpen` action.  You can specify optional `onClose` action to tear down anything you need when Info Window
 has been closed by user.
 
 Available options (see details [in docs](https://developers.google.com/maps/documentation/javascript/3.exp/reference#InfoWindowOptions)):
@@ -139,9 +141,11 @@ Available options (see details [in docs](https://developers.google.com/maps/docu
                      title="Blockless form" message="Plain text."}}
   {{g-map-infowindow context lat=37.7733 lng=-122.4067
                      title="With action set"
+                     onOpen="myOnOpenAction"
                      onClose="myOnCloseAction"}}
   {{g-map-infowindow context lat=37.7733 lng=-122.4067
                      title="With closure action set"
+                     onOpen=(action "myOnOpenAction")
                      onClose=(action "myOnCloseAction")}}
 {{/g-map}}
 ```
@@ -224,7 +228,8 @@ one Info Window is open at each moment for Markers of each group.
 ## Marker bound to address query
 
 Proxy `g-map-address-marker` component takes address string as parameter
-and translates it to lat/lng under the hood.
+and translates it to lat/lng/viewport under the hood.
+The viewport is used internally to fit the map and can be passed as optional parameter.
 
 Optional `onLocationChange` action hook will send you back coordinates
 of the latest address search result and the raw array of
@@ -242,7 +247,9 @@ ENV['g-map'] = {
 ```javascript
 actions: {
   onLocationChangeHandler(lat, lng, results) {
+    const { viewport } = results[0].geometry;
     Ember.Logger.log(`lat: ${lat}, lng: ${lng}`);
+    Ember.Logger.log(`viewport: ${viewport}`);
     Ember.Logger.debug(results);
   }
 }

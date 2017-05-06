@@ -9,18 +9,18 @@ const { isEmpty, isPresent, observer, computed, run, assert, typeOf } = Ember;
 const allowedOptions = Ember.A(['disableAutoPan', 'maxWidth', 'pixelOffset']);
 
 const OPEN_CLOSE_EVENTS = Ember.A(
-  [ 'click', 'dblclick', 'rightclick', 'mouseover', 'mouseout' ]
+  ['click', 'dblclick', 'rightclick', 'mouseover', 'mouseout']
 );
 
 const GMapInfowindowComponent = Ember.Component.extend({
-  layout: layout,
+  layout,
   classNames: ['g-map-marker'],
 
   map: computed.alias('mapContext.map'),
   marker: computed.alias('mapContext.marker'),
 
   init() {
-    this._super(arguments);
+    this._super(...arguments);
 
     const mapContext = this.get('mapContext');
     const hasMap = mapContext instanceof GMapComponent;
@@ -32,7 +32,7 @@ const GMapInfowindowComponent = Ember.Component.extend({
   },
 
   didInsertElement() {
-    this._super();
+    this._super(...arguments);
     if (isEmpty(this.get('infowindow'))) {
       const infowindow = this.buildInfowindow();
       this.set('infowindow', infowindow);
@@ -70,10 +70,23 @@ const GMapInfowindowComponent = Ember.Component.extend({
         content: this.get('element')
       });
 
+      if (isPresent(this.get('attrs.onOpen'))) {
+        infowindow.addListener('domready', () => this.handleOpenClickEvent());
+      }
+
       if (isPresent(this.get('attrs.onClose'))) {
         infowindow.addListener('closeclick', () => this.handleCloseClickEvent());
       }
       return infowindow;
+    }
+  },
+
+  handleOpenClickEvent() {
+    const { onOpen } = this.attrs;
+    if (typeOf(onOpen) === 'function') {
+      onOpen();
+    } else {
+      this.sendAction('onOpen', this);
     }
   },
 
@@ -143,10 +156,10 @@ const GMapInfowindowComponent = Ember.Component.extend({
     const lat = this.get('lat');
     const lng = this.get('lng');
 
-    if (isPresent(infowindow) &&
-        isPresent(lat) &&
-        isPresent(lng) &&
-        (typeof FastBoot === 'undefined')) {
+    if (isPresent(infowindow)
+      && isPresent(lat)
+      && isPresent(lng)
+      && (typeof FastBoot === 'undefined')) {
       const position = new google.maps.LatLng(lat, lng);
       infowindow.setPosition(position);
     }

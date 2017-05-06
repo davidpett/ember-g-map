@@ -1,18 +1,17 @@
 import Ember from 'ember';
 import { moduleForComponent } from 'ember-qunit';
-import test from '../../ember-sinon-qunit/test';
-import GMapComponent from 'ember-g-map/components/g-map';
+import test from 'ember-sinon-qunit/test-support/test';
 import sinon from 'sinon';
 
 const { run } = Ember;
 
-let fakeInfowindowObject;
-let component;
+let fakeInfowindowObject, component;
 
 moduleForComponent('g-map-infowindow', 'Unit | Component | g map infowindow', {
   // Specify the other units that are required for this test
   // needs: ['component:foo', 'helper:bar'],
   unit: true,
+  needs: ['component:g-map'],
 
   beforeEach() {
     fakeInfowindowObject = {
@@ -24,7 +23,8 @@ moduleForComponent('g-map-infowindow', 'Unit | Component | g map infowindow', {
     };
     sinon.stub(google.maps, 'InfoWindow').returns(fakeInfowindowObject);
 
-    const mapContext = new GMapComponent();
+    const GMapComponent = Ember.getOwner(this).factoryFor('component:g-map');
+    const mapContext = GMapComponent.create();
     mapContext.registerInfowindow = sinon.stub();
     mapContext.unregisterInfowindow = sinon.stub();
 
@@ -102,6 +102,14 @@ test('it constructs new `InfoWindow` object during `buildInfowindow`', function(
   assert.equal(returnedInfowindow, fakeInfowindowObject);
 });
 
+test('it triggers `addListener` of infowindow during `buildInfowindow` if onOpen attr specified', function() {
+  run(() => component.set('attrs', { onOpen: 'action' }));
+  run(() => component.buildInfowindow());
+
+  sinon.assert.calledOnce(fakeInfowindowObject.addListener);
+  sinon.assert.calledWith(fakeInfowindowObject.addListener, 'domready');
+});
+
 test('it triggers `addListener` of infowindow during `buildInfowindow` if onClose attr specified', function() {
   run(() => component.set('attrs', { onClose: 'action' }));
   run(() => component.buildInfowindow());
@@ -110,10 +118,26 @@ test('it triggers `addListener` of infowindow during `buildInfowindow` if onClos
   sinon.assert.calledWith(fakeInfowindowObject.addListener, 'closeclick');
 });
 
+test('it doesn\'t trigger `addListener` during `buildInfowindow` if onOpen isn\'t specified', function() {
+  run(() => component.set('attrs', { onOpen: undefined }));
+  run(() => component.buildInfowindow());
+  sinon.assert.notCalled(fakeInfowindowObject.addListener);
+});
+
 test('it doesn\'t trigger `addListener` during `buildInfowindow` if onClose isn\'t specified', function() {
   run(() => component.set('attrs', { onClose: undefined }));
   run(() => component.buildInfowindow());
   sinon.assert.notCalled(fakeInfowindowObject.addListener);
+});
+
+test('it triggers `handleOpenClickEvent` on callback for `domready` event', function() {
+  fakeInfowindowObject.addListener.callsArg(1);
+  component.handleOpenClickEvent = sinon.stub();
+
+  run(() => component.set('attrs', { onOpen: 'action' }));
+  run(() => component.buildInfowindow());
+
+  sinon.assert.calledOnce(component.handleOpenClickEvent);
 });
 
 test('it triggers `handleCloseClickEvent` on callback for `closeclick` event', function() {
@@ -126,6 +150,16 @@ test('it triggers `handleCloseClickEvent` on callback for `closeclick` event', f
   sinon.assert.calledOnce(component.handleCloseClickEvent);
 });
 
+test('it sends action `onOpen` on `handleOpenClickEvent`', function() {
+  component.sendAction = sinon.stub();
+
+  run(() => component.set('attrs', { onOpen: 'action' }));
+  run(() => component.handleOpenClickEvent());
+
+  sinon.assert.calledOnce(component.sendAction);
+  sinon.assert.calledWith(component.sendAction, 'onOpen');
+});
+
 test('it sends action `onClose` on `handleCloseClickEvent`', function() {
   component.sendAction = sinon.stub();
 
@@ -134,6 +168,13 @@ test('it sends action `onClose` on `handleCloseClickEvent`', function() {
 
   sinon.assert.calledOnce(component.sendAction);
   sinon.assert.calledWith(component.sendAction, 'onClose');
+});
+
+test('it runs closure action `attrs.onOpen` directly on `handleOpenClickEvent`', function() {
+  run(() => component.set('attrs', { onOpen: sinon.stub() }));
+  run(() => component.handleOpenClickEvent());
+
+  sinon.assert.calledOnce(component.attrs.onOpen);
 });
 
 test('it runs closure action `attrs.onClose` directly on `handleCloseClickEvent`', function() {
