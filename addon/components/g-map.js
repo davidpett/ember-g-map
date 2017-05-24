@@ -22,6 +22,7 @@ export default Ember.Component.extend({
   permittedOptions: computed('options', function() {
     const { options, bannedOptions } = this.getProperties(['options', 'bannedOptions']);
     const permittedOptions = {};
+
     for (let option in options) {
       if (options.hasOwnProperty(option) && !bannedOptions.includes(option)) {
         permittedOptions[option] = options[option];
@@ -37,11 +38,21 @@ export default Ember.Component.extend({
       const canvas = this.$().find('.g-map-canvas').get(0);
       const options = this.get('permittedOptions');
       const map = new google.maps.Map(canvas, options);
+
       this.set('map', map);
 
+      map.addListener('center_changed', () => {
+        let center = map.getCenter();
+
+        this.setProperties({
+          lat: center.lat(),
+          lng: center.lng()
+        });
+      });
       if (this.get('centerOnResize')) {
         window.addEventListener('resize', () => {
           let map = this.get('map');
+
           if (map) {
             google.maps.event.trigger(map, 'resize');
             this.setCenter();
@@ -63,6 +74,7 @@ export default Ember.Component.extend({
   setOptions() {
     const map = this.get('map');
     const options = this.get('permittedOptions');
+
     if (isPresent(map)) {
       map.setOptions(options);
     }
@@ -75,6 +87,7 @@ export default Ember.Component.extend({
   setZoom() {
     const map = this.get('map');
     const zoom = this.get('zoom');
+
     if (isPresent(map)) {
       map.setZoom(zoom);
     }
@@ -94,6 +107,7 @@ export default Ember.Component.extend({
       && isPresent(lng)
       && (typeof FastBoot === 'undefined')) {
       const center = new google.maps.LatLng(lat, lng);
+
       map.setCenter(center);
     }
   },
@@ -149,6 +163,7 @@ export default Ember.Component.extend({
 
   groupMarkerClicked(marker, group) {
     let markers = this.get('markers').without(marker).filterBy('group', group);
+
     markers.forEach((marker) => marker.closeInfowindow());
   }
 });
