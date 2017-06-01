@@ -44,10 +44,12 @@ export default Ember.Component.extend({
       map.addListener('center_changed', () => {
         let center = map.getCenter();
 
-        this.setProperties({
-          lat: center.lat(),
-          lng: center.lng()
-        });
+        if (!this.isDestroyed) {
+          this.setProperties({
+            lat: center.lat(),
+            lng: center.lng()
+          });
+        }
       });
       if (this.get('centerOnResize')) {
         window.addEventListener('resize', () => {
@@ -65,6 +67,15 @@ export default Ember.Component.extend({
     if (this.get('shouldFit')) {
       this.fitToMarkers();
     }
+  },
+
+  willDestroyElement() {
+    let map = get(this, 'map');
+
+    if (map) {
+      map.clearInstanceListeners();
+    }
+    this.set('map', null);
   },
 
   permittedOptionsChanged: observer('permittedOptions', function() {
