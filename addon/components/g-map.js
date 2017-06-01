@@ -70,7 +70,7 @@ export default Ember.Component.extend({
   },
 
   willDestroyElement() {
-    let map = get(this, 'map');
+    let map = this.get('map');
 
     if (map) {
       map.clearInstanceListeners();
