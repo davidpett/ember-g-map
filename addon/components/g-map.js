@@ -73,7 +73,7 @@ export default Ember.Component.extend({
     let map = this.get('map');
 
     if (map) {
-      map.clearInstanceListeners();
+      google.maps.event.clearInstanceListeners(map);
     }
     this.set('map', null);
   },
